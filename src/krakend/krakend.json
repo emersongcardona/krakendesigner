@@ -38,11 +38,17 @@
                         "http://54.243.236.91:8010"
                     ],
                     "disable_host_sanitize": false
+                },
+                {
+                    "url_pattern": "/",
+                    "encoding": "no-op",
+                    "sd": "static",
+                    "method": "PUT"
                 }
             ]
         },
         {
-            "endpoint": "/v1/clever-fire/{id_fire}",
+            "endpoint": "/test/2",
             "method": "GET",
             "output_encoding": "json",
             "backend": [
@@ -50,9 +56,27 @@
                     "url_pattern": "/",
                     "encoding": "json",
                     "sd": "static",
-                    "method": "GET"
+                    "method": "GET",
+                    "extra_config": {}
                 }
-            ]
+            ],
+            "extra_config": {}
+        },
+        {
+            "endpoint": "/test/33",
+            "method": "GET",
+            "output_encoding": "json",
+            "backend": [
+                {
+                    "url_pattern": "/",
+                    "encoding": "json",
+                    "sd": "static",
+                    "method": "GET",
+                    "extra_config": {}
+                }
+            ],
+            "extra_config": {}
         }
-    ]
+    ],
+    "output_encoding": "json"
 }

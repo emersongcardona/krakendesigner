@@ -1,6 +1,5 @@
 var FileSaver = require('file-saver');
-var krakendConfig
-angular
+var app = angular
     .module('KrakenDesigner')
     .controller('KrakenDesignerController', function ($window, $http, $scope,  $timeout, $rootScope, $location, DefaultConfig, Constants, FileHandleService) {
         $rootScope.window = $window;
@@ -757,25 +756,30 @@ angular
             $rootScope.addBackendQuery($rootScope.service.endpoints.length - 1);
 
         }
+
+
         $rootScope.addEndpoint = function () {
+
             if (typeof $rootScope.service.endpoints === "undefined") {
                 $rootScope.service.endpoints = [];
             }
-
-            console.log("listado de endpoints: ", $rootScope.service.endpoints)
-
-            $rootScope.service.endpoints.push({
-                "endpoint": $rootScope.randomEndpointName(),
-                "method": "GET",
-                "output_encoding": (typeof $rootScope.service.output_encoding === 'undefined' ? "json" : $rootScope.service.output_encoding)
+        
+            // Asegurarse de que Angular detecte los cambios usando $scope.$apply()
+            $timeout(() => {
+                $scope.$apply(() => {
+                    // Agregar un nuevo endpoint al array de endpoints
+                    $rootScope.service.endpoints.push({
+                        "endpoint": $rootScope.randomEndpointName(),
+                        "method": "GET",
+                        "output_encoding": (typeof $rootScope.service.output_encoding === 'undefined' ? "json" : $rootScope.service.output_encoding)
+                    });
+                }, 500);
+        
+                // Llamar a la función para agregar una consulta de backend
+                $rootScope.addBackendQuery($rootScope.service.endpoints.length - 1);
             });
-
-            console.log("despues de hacer push a nuevo endpoint: ", $rootScope.service.endpoints)
-
-            $rootScope.addBackendQuery($rootScope.service.endpoints.length - 1);
-
-            console.log("el endpoint sigue o algo paso y se fue todo a la mierda en addBackendQuery: ", $rootScope.service.endpoints)
         };
+        
 
         // Valid endpoints start with Slash and do not contain /__debug[/] or /__health
         $rootScope.isValidEndpoint = function (endpoint) {
@@ -879,7 +883,6 @@ angular
         };
 
 
-
         $rootScope.addBackendQuery = function (endpoint_index) {
 
             if (typeof $rootScope.service.endpoints[endpoint_index].backend === "undefined") {
@@ -894,6 +897,7 @@ angular
                 "method": (typeof $rootScope.service.endpoints[endpoint_index].method === undefined ? "GET" : $rootScope.service.endpoints[endpoint_index].method)
             });
         };
+
 
         $rootScope.syncHostsInBackend = function (endpoint_index, backend_index, checked, host, disable_host_sanitize) {
 
@@ -1060,18 +1064,15 @@ angular
 
         $rootScope.saveLocalConfig = async function () {
             try {
-                console.log("saving local ")
                 const save = angular.copy($rootScope.service);
                 cleanServiceForSaving($rootScope.service);
-                console.log("json a guardar: ", save)
                 $http.post('http://0.0.0.0:7000/save-krakend-config', save).then(
                     function(response) {
-                        alert("Configuracion Guardada");
                         $rootScope.loadDefaultConfig();
+                        alert("Guardado")
                     },
                     function(error) {
-                        console.log("error saving: ", error)
-                        alert("Failed to save the file: " + error.message);
+                        alert("Failed to save the file: " + error);
                     }
                 );
             } catch (e) {
@@ -1081,13 +1082,12 @@ angular
         
 
         $rootScope.loadDefaultConfig = function () {
+            console.log("llamando a loadDefaultConfig")
             $http.get('http://0.0.0.0:7000/get-krakend-config')
                 .then(function(response) {
                     $timeout(() => {
                         $scope.$apply(() => {
-                            console.log("data: ", response.data)
                             $rootScope.service_configuration = angular.copy(JSON.stringify(response.data));
-                            console.log("json cargado: ", $rootScope.service_configuration);
                             $rootScope.loadFile();
                         });
                     }, 500);
@@ -1098,9 +1098,31 @@ angular
         };
         
     
-        $rootScope.loadDefaultConfig();
+        //$rootScope.loadDefaultConfig();
 
-    });
+    
+
+    }).run(['$http', '$timeout', '$rootScope', function($http, $timeout, $rootScope) {
+        console.log("Ejecutando al iniciar la aplicación");
+
+        // Realiza la petición HTTP directamente en el bloque run
+        $http.get('http://0.0.0.0:7000/get-krakend-config')
+            .then(function(response) {
+                $timeout(function() {
+                    $rootScope.service_configuration = angular.copy(JSON.stringify(response.data));
+                    $rootScope.loadFile(); // Llama a la función loadFile desde $rootScope
+                }, 500);
+            })
+            .catch(function(error) {
+                console.error('Error loading the default config file:', error);
+            });
+    }]);
+
+
+//app.run(['$rootScope', function($rootScope) {
+  //  console.log("una vez al comenzaer prrro sarnozo")
+    //$rootScope.loadDefaultConfig();
+//}]);
 
 function downloadDocument (name, content) {
     FileSaver.saveAs(new Blob([content]), name, { type: "text/plain;charset=UTF-8", autoBom: false });
