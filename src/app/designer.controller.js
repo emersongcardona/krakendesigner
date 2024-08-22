@@ -1,10 +1,8 @@
 var FileSaver = require('file-saver');
-//import krakendConfig from "../krakend/krakend.json"
-const krakendConfig = require('../krakend/krakend.json');
-
+var krakendConfig
 angular
     .module('KrakenDesigner')
-    .controller('KrakenDesignerController', function ($window, $scope,  $timeout, $rootScope, $location, DefaultConfig, Constants, FileHandleService) {
+    .controller('KrakenDesignerController', function ($window, $http, $scope,  $timeout, $rootScope, $location, DefaultConfig, Constants, FileHandleService) {
         $rootScope.window = $window;
 
         if ('undefined' === typeof $rootScope.service) {
@@ -760,10 +758,11 @@ angular
 
         }
         $rootScope.addEndpoint = function () {
-
             if (typeof $rootScope.service.endpoints === "undefined") {
                 $rootScope.service.endpoints = [];
             }
+
+            console.log("listado de endpoints: ", $rootScope.service.endpoints)
 
             $rootScope.service.endpoints.push({
                 "endpoint": $rootScope.randomEndpointName(),
@@ -771,8 +770,11 @@ angular
                 "output_encoding": (typeof $rootScope.service.output_encoding === 'undefined' ? "json" : $rootScope.service.output_encoding)
             });
 
+            console.log("despues de hacer push a nuevo endpoint: ", $rootScope.service.endpoints)
 
             $rootScope.addBackendQuery($rootScope.service.endpoints.length - 1);
+
+            console.log("el endpoint sigue o algo paso y se fue todo a la mierda en addBackendQuery: ", $rootScope.service.endpoints)
         };
 
         // Valid endpoints start with Slash and do not contain /__debug[/] or /__health
@@ -1058,41 +1060,41 @@ angular
 
         $rootScope.saveLocalConfig = async function () {
             try {
-                const filePath = '../krakend/krakend.json';
-                console.log("save json: ", $rootScope.service )
-
-                let save = angular.copy($rootScope.service);
-                
-                console.log("endpoints list: ", save.endpoints)
-                console.log("type of save: ", typeof($rootScope.service))
-                cleanServiceForSaving(save);
-                const save_contents = angular.toJson(save, true);
-        
-                
-                const fs = require('fs');
-                fs.writeFileSync(filePath, save_contents, 'utf8');
-        
-                alert("File saved successfully!");
-                console.log("File saved successfully at: " + filePath);
+                console.log("saving local ")
+                const save = angular.copy($rootScope.service);
+                cleanServiceForSaving($rootScope.service);
+                console.log("json a guardar: ", save)
+                $http.post('http://0.0.0.0:7000/save-krakend-config', save).then(
+                    function(response) {
+                        alert("Configuracion Guardada");
+                        $rootScope.loadDefaultConfig();
+                    },
+                    function(error) {
+                        console.log("error saving: ", error)
+                        alert("Failed to save the file: " + error.message);
+                    }
+                );
             } catch (e) {
-                alert('Failed to save the file locally:\n\n' + e.message);
+                alert('Failed to save the file:\n\n' + e.message);
             }
         };
-
-        $rootScope.loadDefaultConfig = async function () {
-            try {  
-                
-                $timeout(() => {
-                    $scope.$apply(() => {
-                        $scope.service_configuration = JSON.stringify(krakendConfig);
-                        console.log("json cargado: ", $scope.service_configuration)
-                        $rootScope.loadFile();
-                    });
-                }, 500);
         
-            } catch (error) {
-                console.error('Error loading the default config file:', error);
-            }
+
+        $rootScope.loadDefaultConfig = function () {
+            $http.get('http://0.0.0.0:7000/get-krakend-config')
+                .then(function(response) {
+                    $timeout(() => {
+                        $scope.$apply(() => {
+                            console.log("data: ", response.data)
+                            $rootScope.service_configuration = angular.copy(JSON.stringify(response.data));
+                            console.log("json cargado: ", $rootScope.service_configuration);
+                            $rootScope.loadFile();
+                        });
+                    }, 500);
+                })
+                .catch(function(error) {
+                    console.error('Error loading the default config file:', error);
+                });
         };
         
     

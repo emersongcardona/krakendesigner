@@ -7,7 +7,7 @@
     "extra_config": {},
     "endpoints": [
         {
-            "endpoint": "/soap-proxy",
+            "endpoint": "/soap-proxy/pato",
             "method": "POST",
             "output_encoding": "no-op",
             "extra_config": {},
@@ -17,10 +17,42 @@
                     "host": [
                         "http://54.243.236.91:8010"
                     ],
-                    "method": "POST"
+                    "method": "POST",
+                    "extra_config": {}
+                }
+            ]
+        },
+        {
+            "endpoint": "/proxy/test/2",
+            "method": "PUT",
+            "output_encoding": "no-op",
+            "extra_config": {},
+            "backend": [
+                {
+                    "url_pattern": "/proxy/test/2",
+                    "encoding": "no-op",
+                    "sd": "static",
+                    "method": "PUT",
+                    "extra_config": {},
+                    "host": [
+                        "http://54.243.236.91:8010"
+                    ],
+                    "disable_host_sanitize": false
+                }
+            ]
+        },
+        {
+            "endpoint": "/v1/clever-fire/{id_fire}",
+            "method": "GET",
+            "output_encoding": "json",
+            "backend": [
+                {
+                    "url_pattern": "/",
+                    "encoding": "json",
+                    "sd": "static",
+                    "method": "GET"
                 }
             ]
         }
     ]
 }
-
