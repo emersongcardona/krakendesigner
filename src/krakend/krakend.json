@@ -1,0 +1,26 @@
+{
+    "$schema": "https://www.krakend.io/schema/v3.json",
+    "version": 3,
+    "name": "KrakenD SOAP Gateway",
+    "port": 9000,
+    "timeout": "3000ms",
+    "extra_config": {},
+    "endpoints": [
+        {
+            "endpoint": "/soap-proxy",
+            "method": "POST",
+            "output_encoding": "no-op",
+            "extra_config": {},
+            "backend": [
+                {
+                    "url_pattern": "/sap/bc/srt/rfc/sap/zws_sd_desti_merca/300/zws_sd_desti_merca/zbind_zws_sd_desti_merca",
+                    "host": [
+                        "http://54.243.236.91:8010"
+                    ],
+                    "method": "POST"
+                }
+            ]
+        }
+    ]
+}
+

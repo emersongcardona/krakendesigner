@@ -1,8 +1,10 @@
 var FileSaver = require('file-saver');
+//import krakendConfig from "../krakend/krakend.json"
+const krakendConfig = require('../krakend/krakend.json');
 
 angular
     .module('KrakenDesigner')
-    .controller('KrakenDesignerController', function ($window, $scope, $rootScope, $location, DefaultConfig, Constants, FileHandleService) {
+    .controller('KrakenDesignerController', function ($window, $scope,  $timeout, $rootScope, $location, DefaultConfig, Constants, FileHandleService) {
         $rootScope.window = $window;
 
         if ('undefined' === typeof $rootScope.service) {
@@ -142,6 +144,7 @@ angular
                 alert('Failed to save the file locally:\n\n' + e.message);
             }
         };
+
 
         document.addEventListener("keydown", function (event) {
             if (event.ctrlKey && event.key === 'd') {
@@ -1052,6 +1055,48 @@ angular
             noun = dict.randNoun();
             return "/v1/" + dict.randAdjective() + '-' + noun + '/' + "{id_" + noun + "}";
         }
+
+        $rootScope.saveLocalConfig = async function () {
+            try {
+                const filePath = '../krakend/krakend.json';
+                console.log("save json: ", $rootScope.service )
+
+                let save = angular.copy($rootScope.service);
+                
+                console.log("endpoints list: ", save.endpoints)
+                console.log("type of save: ", typeof($rootScope.service))
+                cleanServiceForSaving(save);
+                const save_contents = angular.toJson(save, true);
+        
+                
+                const fs = require('fs');
+                fs.writeFileSync(filePath, save_contents, 'utf8');
+        
+                alert("File saved successfully!");
+                console.log("File saved successfully at: " + filePath);
+            } catch (e) {
+                alert('Failed to save the file locally:\n\n' + e.message);
+            }
+        };
+
+        $rootScope.loadDefaultConfig = async function () {
+            try {  
+                
+                $timeout(() => {
+                    $scope.$apply(() => {
+                        $scope.service_configuration = JSON.stringify(krakendConfig);
+                        console.log("json cargado: ", $scope.service_configuration)
+                        $rootScope.loadFile();
+                    });
+                }, 500);
+        
+            } catch (error) {
+                console.error('Error loading the default config file:', error);
+            }
+        };
+        
+    
+        $rootScope.loadDefaultConfig();
 
     });
 
